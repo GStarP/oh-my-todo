@@ -29,7 +29,8 @@ export function TodoList() {
               "flex items-center gap-3 rounded-lg px-3 py-2.5 cursor-pointer transition-colors hover:bg-muted",
               selectedId === todo.id && "bg-muted",
               info?.urgency === "expired" && "border-l-2 border-l-red-500",
-              info?.urgency === "urgent" && "border-l-2 border-l-orange-500"
+              info?.urgency === "urgent" && "border-l-2 border-l-orange-500",
+              info?.urgency === "remind" && "border-l-2 border-l-yellow-400"
             )}
           >
             <div
