@@ -69,28 +69,36 @@ function TodoEditForm({ todo }: { todo: Todo }) {
     setSelectedId(null)
   }
 
+  const saveDeadline = (deadline: string | null) => {
+    setEditDeadline(deadline)
+    setTodos((draft) => {
+      const item = draft.find((t) => t.id === todo.id)
+      if (item) item.deadline = deadline
+    })
+  }
+
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return
     const prevTime = editDeadline && !isDateOnly(editDeadline)
       ? dayjs(editDeadline).format("HH:mm:ss")
       : "00:00:00"
     const newDeadline = dayjs(date).format("YYYY-MM-DD") + "T" + prevTime
-    setEditDeadline(newDeadline)
+    saveDeadline(newDeadline)
     setCalendarOpen(false)
   }
 
   const handleTimeChange = (timeStr: string) => {
     if (!editDeadline) return
     if (!timeStr) {
-      setEditDeadline(dayjs(editDeadline).startOf("day").format("YYYY-MM-DDTHH:mm:ss"))
+      saveDeadline(dayjs(editDeadline).startOf("day").format("YYYY-MM-DDTHH:mm:ss"))
       return
     }
     const newDeadline = dayjs(editDeadline).format("YYYY-MM-DD") + "T" + timeStr + ":00"
-    setEditDeadline(newDeadline)
+    saveDeadline(newDeadline)
   }
 
   const handleClearDeadline = () => {
-    setEditDeadline(null)
+    saveDeadline(null)
   }
 
   const deadlineDate = editDeadline ? new Date(editDeadline) : undefined
