@@ -26,22 +26,25 @@ export function getDeadlineInfo(
     const diffDays = dlDay.diff(today, "day")
 
     if (diffDays < 0) return { urgency: "expired", text: "已过期" }
-    if (diffDays <= 1) return { urgency: "urgent", text: diffDays === 0 ? "今天" : "明天" }
-    if (diffDays > 1 && diffDays <= 3)
-      return { urgency: "remind", text: `${diffDays}天内` }
-    return { urgency: null, text: null }
+    if (diffDays === 0) return { urgency: "urgent", text: "今天" }
+    if (diffDays === 1) return { urgency: "urgent", text: "明天" }
+    if (diffDays <= 3) return { urgency: "remind", text: `${diffDays}天内` }
+    return { urgency: null, text: dl.format("M月D日") }
   }
 
   const diffMs = dl.valueOf() - now.valueOf()
+  const isToday = dl.format("YYYY-MM-DD") === now.format("YYYY-MM-DD")
 
   if (diffMs <= 0) return { urgency: "expired", text: "已过期" }
 
   const diffHours = diffMs / (1000 * 60 * 60)
 
-  if (diffHours <= 24) {
-    const diffMinutes = Math.ceil(diffMs / (1000 * 60))
-    if (diffMinutes <= 1) return { urgency: "urgent", text: "1分钟内" }
-    if (diffHours < 1) return { urgency: "urgent", text: `${diffMinutes}分钟内` }
+  if (isToday) {
+    if (diffHours < 1) {
+      const diffMinutes = Math.ceil(diffMs / (1000 * 60))
+      if (diffMinutes <= 1) return { urgency: "urgent", text: "1分钟内" }
+      return { urgency: "urgent", text: `${diffMinutes}分钟内` }
+    }
     return { urgency: "urgent", text: `${Math.ceil(diffHours)}小时内` }
   }
 
@@ -49,7 +52,7 @@ export function getDeadlineInfo(
     return { urgency: "remind", text: `${Math.ceil(diffHours / 24)}天内` }
   }
 
-  return { urgency: null, text: null }
+  return { urgency: null, text: dl.format("M月D日 HH:mm") }
 }
 
 export function formatDeadline(deadline: string): string {
