@@ -11,7 +11,11 @@ function readStorage(): Todo[] {
   const raw = localStorage.getItem(STORAGE_KEY)
   if (!raw) return []
   try {
-    return JSON.parse(raw) as Todo[]
+    const todos = JSON.parse(raw) as Todo[]
+    return todos.map((t) => ({
+      ...t,
+      deadline: t.deadline ?? null,
+    }))
   } catch {
     return []
   }
