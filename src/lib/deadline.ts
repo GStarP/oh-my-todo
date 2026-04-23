@@ -39,19 +39,8 @@ export function getDeadlineInfo(
 
   const diffHours = diffMs / (1000 * 60 * 60)
 
-  if (isToday) {
-    if (diffHours < 1) {
-      const diffMinutes = Math.ceil(diffMs / (1000 * 60))
-      if (diffMinutes <= 1) return { urgency: "urgent", text: "1分钟内" }
-      return { urgency: "urgent", text: `${diffMinutes}分钟内` }
-    }
-    return { urgency: "urgent", text: `${Math.ceil(diffHours)}小时内` }
-  }
-
-  if (diffHours <= 72) {
-    return { urgency: "remind", text: `${Math.ceil(diffHours / 24)}天内` }
-  }
-
+  if (isToday) return { urgency: "urgent", text: dl.format("HH:mm") }
+  if (diffHours <= 72) return { urgency: "remind", text: dl.format("M月D日 HH:mm") }
   return { urgency: null, text: dl.format("M月D日 HH:mm") }
 }
 
