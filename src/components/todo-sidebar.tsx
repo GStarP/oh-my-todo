@@ -101,6 +101,14 @@ function TodoEditForm({ todo }: { todo: Todo }) {
     saveDeadline(null)
   }
 
+  const handleImportanceChange = (value: string) => {
+    const num = value === "" ? 0 : Math.max(0, parseInt(value, 10) || 0)
+    setTodos((draft) => {
+      const item = draft.find((t) => t.id === todo.id)
+      if (item) item.importance = num
+    })
+  }
+
   const deadlineDate = editDeadline ? new Date(editDeadline) : undefined
   const deadlineTime = editDeadline && !isDateOnly(editDeadline)
     ? dayjs(editDeadline).format("HH:mm:ss")
@@ -115,6 +123,16 @@ function TodoEditForm({ todo }: { todo: Todo }) {
           onChange={(e) => setEditTitle(e.target.value)}
           onBlur={handleSave}
           onKeyDown={(e) => e.key === "Enter" && handleSave()}
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label className="text-sm font-medium">重要度</Label>
+        <Input
+          type="number"
+          min={0}
+          value={todo.importance}
+          onChange={(e) => handleImportanceChange(e.target.value)}
+          className="w-24"
         />
       </div>
       <div className="flex flex-col gap-2">
