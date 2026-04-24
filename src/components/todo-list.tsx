@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { useAtom, useSetAtom } from "jotai"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -8,25 +9,15 @@ import {
 import { todosAtom, selectedTodoIdAtom } from "@/atoms/todo-atoms"
 import { cn } from "@/lib/utils"
 import { getDeadlineInfo } from "@/lib/deadline"
+import { buildTodoGroups } from "@/lib/todo-groups"
 import { ChevronRightIcon } from "lucide-react"
-import type { Todo } from "@/types/todo"
-
-function groupByImportance(todos: Todo[]): Map<number, Todo[]> {
-  const groups = new Map<number, Todo[]>()
-  for (const todo of todos) {
-    const key = todo.importance
-    if (!groups.has(key)) groups.set(key, [])
-    groups.get(key)!.push(todo)
-  }
-  return new Map(
-    [...groups.entries()].sort((a, b) => b[0] - a[0])
-  )
-}
 
 export function TodoList() {
   const [todos] = useAtom(todosAtom)
   const [selectedId, setSelectedId] = useAtom(selectedTodoIdAtom)
   const setTodos = useSetAtom(todosAtom)
+  const groups = buildTodoGroups(todos)
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({})
 
   if (todos.length === 0) {
     return (
@@ -36,20 +27,28 @@ export function TodoList() {
     )
   }
 
-  const groups = groupByImportance(todos)
-
   return (
     <div className="flex flex-col gap-2">
-      {[...groups.entries()].map(([importance, items]) => (
-        <Collapsible key={importance} defaultOpen>
-          <CollapsibleTrigger className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors group">
-            <ChevronRightIcon className="size-4 transition-transform group-data-[state=open]:rotate-90" />
-            <span>重要度 {importance}</span>
-            <span className="text-xs text-muted-foreground/60">{items.length}</span>
+      {groups.map((group) => (
+        <Collapsible
+          key={group.key}
+          open={openGroups[group.key] ?? group.defaultOpen}
+          onOpenChange={(open) => {
+            setOpenGroups((current) => ({ ...current, [group.key]: open }))
+          }}
+        >
+          <CollapsibleTrigger className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors">
+            <ChevronRightIcon
+              className={cn(
+                "size-4 transition-transform",
+                (openGroups[group.key] ?? group.defaultOpen) && "rotate-90"
+              )}
+            />
+            <span>{group.label}</span>
           </CollapsibleTrigger>
           <CollapsibleContent>
             <div className="flex flex-col gap-1 mt-1">
-              {items.map((todo) => {
+              {group.todos.map((todo) => {
                 const info = getDeadlineInfo(todo.deadline, todo.completed)
                 return (
                   <div
