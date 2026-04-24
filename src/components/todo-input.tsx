@@ -11,7 +11,7 @@ export function TodoInput() {
     e.preventDefault()
     const trimmed = title.trim()
     if (!trimmed) return
-    const todo = { id: crypto.randomUUID(), title: trimmed, completed: false, deadline: null }
+    const todo = { id: crypto.randomUUID(), title: trimmed, completed: false, deadline: null, importance: 0 }
     setTodos((draft) => {
       draft.push(todo)
     })

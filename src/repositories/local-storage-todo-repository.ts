@@ -15,6 +15,7 @@ function readStorage(): Todo[] {
     return todos.map((t) => ({
       ...t,
       deadline: t.deadline ?? null,
+      importance: t.importance ?? 0,
     }))
   } catch {
     return []

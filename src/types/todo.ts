@@ -3,4 +3,5 @@ export interface Todo {
   title: string
   completed: boolean
   deadline: string | null
+  importance: number
 }
