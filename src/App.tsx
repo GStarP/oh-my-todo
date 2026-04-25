@@ -30,6 +30,7 @@ function AppContent() {
       const todo = todosRef.current.find((t) => t.id === event.active.id)
       setActiveTodo(todo ?? null)
       setIsDragging(true)
+      document.body.style.touchAction = "none"
     },
     [],
   )
@@ -39,6 +40,7 @@ function AppContent() {
       const { active, over } = event
       setActiveTodo(null)
       setIsDragging(false)
+      document.body.style.touchAction = ""
 
       if (!over) return
 
@@ -159,6 +161,11 @@ function AppContent() {
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onDragCancel={() => {
+        setActiveTodo(null)
+        setIsDragging(false)
+        document.body.style.touchAction = ""
+      }}
     >
       <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
         <TodoInput isDragging={isDragging} />
