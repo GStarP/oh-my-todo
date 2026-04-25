@@ -17,6 +17,7 @@ function readStorage(): Todo[] {
       deadline: t.deadline ?? null,
       importance: t.importance ?? 0,
       sortOrder: t.sortOrder ?? 0,
+      notes: t.notes ?? "",
     }))
   } catch {
     return []

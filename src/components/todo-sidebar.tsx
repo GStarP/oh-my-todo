@@ -44,6 +44,7 @@ function TodoEditForm({ todo }: { todo: Todo }) {
   const setSelectedId = useSetAtom(selectedTodoIdAtom)
 
   const [editTitle, setEditTitle] = useState(todo.title)
+  const [editNotes, setEditNotes] = useState(todo.notes)
   const [editDeadline, setEditDeadline] = useState<string | null>(todo.deadline)
   const [calendarOpen, setCalendarOpen] = useState(false)
 
@@ -57,6 +58,19 @@ function TodoEditForm({ todo }: { todo: Todo }) {
         item.deadline = editDeadline
       }
     })
+  }
+
+  const handleNotesBlur = () => {
+    setTodos((draft) => {
+      const item = draft.find((t) => t.id === todo.id)
+      if (item) item.notes = editNotes
+    })
+  }
+
+  const handleNotesInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setEditNotes(e.target.value)
+    e.target.style.height = "auto"
+    e.target.style.height = e.target.scrollHeight + "px"
   }
 
   const handleDelete = () => {
@@ -124,6 +138,17 @@ function TodoEditForm({ todo }: { todo: Todo }) {
         />
       </div>
       <div className="flex flex-col gap-2">
+        <Label>备注</Label>
+        <textarea
+          value={editNotes}
+          onChange={handleNotesInput}
+          onBlur={handleNotesBlur}
+          placeholder="添加备注"
+          rows={2}
+          className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm leading-6 transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 resize-none overflow-hidden"
+        />
+      </div>
+      <div className="flex flex-col gap-2">
         <Label>重要度</Label>
         <Input
           type="number"
@@ -137,7 +162,7 @@ function TodoEditForm({ todo }: { todo: Todo }) {
         <Label>截止时间</Label>
         <div className="flex gap-2">
           <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-            <PopoverTrigger render={<Button variant="outline" className="justify-between font-normal flex-1" />}>
+            <PopoverTrigger render={<Button variant="outline" className="justify-between font-normal flex-1 bg-transparent" />}>
               {editDeadline ? dayjs(editDeadline).format("YYYY-MM-DD") : "选择日期"}
               <ChevronDownIcon />
             </PopoverTrigger>
@@ -155,7 +180,7 @@ function TodoEditForm({ todo }: { todo: Todo }) {
             disabled={!editDeadline}
             value={deadlineTime}
             onChange={(e) => handleTimeChange(e.target.value)}
-            className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none w-32"
+            className="appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none w-32"
           />
           {editDeadline && (
             <Button variant="ghost" size="icon-sm" onClick={handleClearDeadline}>

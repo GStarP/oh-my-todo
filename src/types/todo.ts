@@ -5,4 +5,5 @@ export interface Todo {
   deadline: string | null
   importance: number
   sortOrder: number
+  notes: string
 }
