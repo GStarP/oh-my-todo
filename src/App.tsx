@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef } from "react"
 import { Provider, useAtom } from "jotai"
 import {
   DndContext,
@@ -21,14 +21,16 @@ function AppContent() {
   const [isDragging, setIsDragging] = useState(false)
   const [activeTodo, setActiveTodo] = useState<Todo | null>(null)
   const sensor = useLongPressSensor()
+  const todosRef = useRef(todos)
+  todosRef.current = todos
 
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
-      const todo = todos.find((t) => t.id === event.active.id)
+      const todo = todosRef.current.find((t) => t.id === event.active.id)
       setActiveTodo(todo ?? null)
       setIsDragging(true)
     },
-    [todos],
+    [],
   )
 
   const handleDragEnd = useCallback(
@@ -40,9 +42,10 @@ function AppContent() {
       if (!over) return
 
       const activeId = active.id as string
+      const currentTodos = todosRef.current
 
       if (over.id === "input-drop-area") {
-        const otherActiveTodos = todos.filter(
+        const otherActiveTodos = currentTodos.filter(
           (t) => !t.completed && t.id !== activeId,
         )
         const maxImportance =
@@ -69,20 +72,20 @@ function AppContent() {
       }
 
       const overId = over.id as string
-      const activeTodo = todos.find((t) => t.id === activeId)
-      const overTodo = todos.find((t) => t.id === overId)
+      const activeTodo = currentTodos.find((t) => t.id === activeId)
+      const overTodo = currentTodos.find((t) => t.id === overId)
       if (!activeTodo || !overTodo) return
       if (overTodo.completed) return
 
       const sameGroup = activeTodo.importance === overTodo.importance
 
       if (sameGroup) {
-        const groupTodos = todos
+        const groupTodos = currentTodos
           .filter((t) => !t.completed && t.importance === activeTodo.importance)
           .sort((a, b) => a.sortOrder - b.sortOrder)
         const oldIndex = groupTodos.findIndex((t) => t.id === activeId)
         const newIndex = groupTodos.findIndex((t) => t.id === overId)
-        if (oldIndex === -1 || newIndex === -1) return
+        if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return
 
         const reordered = arrayMove(groupTodos, oldIndex, newIndex)
         const newOrders = recalculateSortOrders(reordered)
@@ -96,7 +99,7 @@ function AppContent() {
         })
       } else {
         const targetImportance = overTodo.importance
-        const targetGroupTodos = todos
+        const targetGroupTodos = currentTodos
           .filter((t) => !t.completed && t.importance === targetImportance)
           .sort((a, b) => a.sortOrder - b.sortOrder)
         const overIndex = targetGroupTodos.findIndex((t) => t.id === overId)
@@ -127,7 +130,7 @@ function AppContent() {
         })
 
         const sourceImportance = activeTodo.importance
-        const sourceGroup = todos.filter(
+        const sourceGroup = currentTodos.filter(
           (t) =>
             !t.completed &&
             t.importance === sourceImportance &&
@@ -146,7 +149,7 @@ function AppContent() {
         }
       }
     },
-    [todos, setTodos],
+    [setTodos],
   )
 
   return (
