@@ -2,8 +2,9 @@ import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { useSetAtom } from "jotai"
 import { todosAtom } from "@/atoms/todo-atoms"
+import { DroppableInputArea } from "@/components/droppable-input-area"
 
-export function TodoInput() {
+export function TodoInput({ isDragging = false }: { isDragging?: boolean }) {
   const [title, setTitle] = useState("")
   const setTodos = useSetAtom(todosAtom)
 
@@ -16,6 +17,10 @@ export function TodoInput() {
       draft.push(todo)
     })
     setTitle("")
+  }
+
+  if (isDragging) {
+    return <DroppableInputArea isDragging={isDragging} />
   }
 
   return (
