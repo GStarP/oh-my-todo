@@ -101,8 +101,16 @@ function AppContent() {
           .sort((a, b) => a.sortOrder - b.sortOrder)
         const overIndex = targetGroupTodos.findIndex((t) => t.id === overId)
 
+        const overRect = over.rect
+        const activeRect = active.rect.current.translated
+        const insertAfter =
+          overRect &&
+          activeRect &&
+          activeRect.top + activeRect.height / 2 > overRect.top + overRect.height / 2
+        const insertIndex = insertAfter ? overIndex + 1 : overIndex
+
         const inserted = [...targetGroupTodos]
-        inserted.splice(overIndex, 0, { ...activeTodo, importance: targetImportance })
+        inserted.splice(insertIndex, 0, { ...activeTodo, importance: targetImportance })
         const newTargetOrders = recalculateSortOrders(inserted)
         setTodos((draft) => {
           const item = draft.find((t) => t.id === activeId)
