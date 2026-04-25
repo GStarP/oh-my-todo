@@ -11,6 +11,7 @@ function makeTodo(overrides: Partial<Todo>): Todo {
     deadline: overrides.deadline ?? null,
     importance: overrides.importance ?? 0,
     sortOrder: overrides.sortOrder ?? 0,
+    notes: overrides.notes ?? "",
   }
 }
 
