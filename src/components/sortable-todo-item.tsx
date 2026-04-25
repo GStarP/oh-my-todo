@@ -34,6 +34,16 @@ export function SortableTodoItem({ todo, selectedId }: { todo: Todo; selectedId:
     transition,
   }
 
+  if (isDragging) {
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className="rounded-md px-3 py-2.5"
+      />
+    )
+  }
+
   const info = getDeadlineInfo(todo.deadline, todo.completed)
 
   return (
@@ -48,7 +58,6 @@ export function SortableTodoItem({ todo, selectedId }: { todo: Todo; selectedId:
         selectedId === todo.id && "shadow-subtle outline outline-1 outline-primary/20",
         !todo.completed && info?.urgency && urgencyBg[info.urgency],
         todo.completed && "bg-white/70",
-        isDragging && "opacity-50",
       )}
     >
       <div onClick={(e) => e.stopPropagation()}>

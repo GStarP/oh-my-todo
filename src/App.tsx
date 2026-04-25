@@ -1,18 +1,166 @@
-import { useState } from "react"
-import { Provider } from "jotai"
+import { useState, useCallback } from "react"
+import { Provider, useAtom } from "jotai"
+import {
+  DndContext,
+  DragOverlay,
+  closestCenter,
+  type DragStartEvent,
+  type DragEndEvent,
+} from "@dnd-kit/core"
+import { arrayMove } from "@dnd-kit/sortable"
 import { TodoInput } from "@/components/todo-input"
 import { TodoList } from "@/components/todo-list"
 import { TodoSidebar } from "@/components/todo-sidebar"
+import { todosAtom } from "@/atoms/todo-atoms"
+import { useLongPressSensor } from "@/lib/drag-sensors"
+import { recalculateSortOrders } from "@/lib/sort-order-utils"
+import type { Todo } from "@/types/todo"
 
 function AppContent() {
+  const [todos, setTodos] = useAtom(todosAtom)
   const [isDragging, setIsDragging] = useState(false)
+  const [activeTodo, setActiveTodo] = useState<Todo | null>(null)
+  const sensor = useLongPressSensor()
+
+  const handleDragStart = useCallback(
+    (event: DragStartEvent) => {
+      const todo = todos.find((t) => t.id === event.active.id)
+      setActiveTodo(todo ?? null)
+      setIsDragging(true)
+    },
+    [todos],
+  )
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event
+      setActiveTodo(null)
+      setIsDragging(false)
+
+      if (!over) return
+
+      const activeId = active.id as string
+
+      if (over.id === "input-drop-area") {
+        const otherActiveTodos = todos.filter(
+          (t) => !t.completed && t.id !== activeId,
+        )
+        const maxImportance =
+          otherActiveTodos.length > 0
+            ? Math.max(...otherActiveTodos.map((t) => t.importance))
+            : -1
+        const newImportance = maxImportance + 1
+        const targetGroupTodos = otherActiveTodos.filter(
+          (t) => t.importance === newImportance,
+        )
+        const newSortOrder =
+          targetGroupTodos.length > 0
+            ? Math.max(...targetGroupTodos.map((t) => t.sortOrder)) + 100
+            : 0
+
+        setTodos((draft) => {
+          const item = draft.find((t) => t.id === activeId)
+          if (item) {
+            item.importance = newImportance
+            item.sortOrder = newSortOrder
+          }
+        })
+        return
+      }
+
+      const overId = over.id as string
+      const activeTodo = todos.find((t) => t.id === activeId)
+      const overTodo = todos.find((t) => t.id === overId)
+      if (!activeTodo || !overTodo) return
+      if (overTodo.completed) return
+
+      const sameGroup = activeTodo.importance === overTodo.importance
+
+      if (sameGroup) {
+        const groupTodos = todos
+          .filter((t) => !t.completed && t.importance === activeTodo.importance)
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+        const oldIndex = groupTodos.findIndex((t) => t.id === activeId)
+        const newIndex = groupTodos.findIndex((t) => t.id === overId)
+        if (oldIndex === -1 || newIndex === -1) return
+
+        const reordered = arrayMove(groupTodos, oldIndex, newIndex)
+        const newOrders = recalculateSortOrders(reordered)
+        setTodos((draft) => {
+          for (const item of draft) {
+            const newOrder = newOrders.get(item.id)
+            if (newOrder !== undefined) {
+              item.sortOrder = newOrder
+            }
+          }
+        })
+      } else {
+        const targetImportance = overTodo.importance
+        const targetGroupTodos = todos
+          .filter((t) => !t.completed && t.importance === targetImportance)
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+        const overIndex = targetGroupTodos.findIndex((t) => t.id === overId)
+
+        const inserted = [...targetGroupTodos]
+        inserted.splice(overIndex, 0, { ...activeTodo, importance: targetImportance })
+        const newTargetOrders = recalculateSortOrders(inserted)
+        setTodos((draft) => {
+          const item = draft.find((t) => t.id === activeId)
+          if (item) {
+            item.importance = targetImportance
+            item.sortOrder = newTargetOrders.get(activeId) ?? 0
+          }
+          for (const d of draft) {
+            const newOrder = newTargetOrders.get(d.id)
+            if (newOrder !== undefined) {
+              d.sortOrder = newOrder
+            }
+          }
+        })
+
+        const sourceImportance = activeTodo.importance
+        const sourceGroup = todos.filter(
+          (t) =>
+            !t.completed &&
+            t.importance === sourceImportance &&
+            t.id !== activeId,
+        )
+        if (sourceGroup.length > 0) {
+          const newSourceOrders = recalculateSortOrders(sourceGroup)
+          setTodos((draft) => {
+            for (const item of draft) {
+              const newOrder = newSourceOrders.get(item.id)
+              if (newOrder !== undefined) {
+                item.sortOrder = newOrder
+              }
+            }
+          })
+        }
+      }
+    },
+    [todos, setTodos],
+  )
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
-      <TodoInput isDragging={isDragging} />
-      <TodoList isDragging={isDragging} onDragStateChange={setIsDragging} />
-      <TodoSidebar />
-    </div>
+    <DndContext
+      sensors={[sensor]}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
+        <TodoInput isDragging={isDragging} />
+        <TodoList />
+        <TodoSidebar />
+      </div>
+      <DragOverlay>
+        {activeTodo ? (
+          <div className="flex items-center gap-3 rounded-md px-3 py-2.5 bg-white shadow-lg">
+            <span className="flex-1 text-sm leading-6">{activeTodo.title}</span>
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   )
 }
 
