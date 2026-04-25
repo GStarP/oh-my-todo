@@ -94,10 +94,12 @@ export function TodoList({
       const targetImportance = overTodo.importance
 
       if (sameGroup) {
-        const groupTodos = todos.filter(
-          (t) =>
-            !t.completed && t.importance === targetImportance && t.id !== activeId,
-        )
+        const groupTodos = todos
+          .filter(
+            (t) =>
+              !t.completed && t.importance === targetImportance && t.id !== activeId,
+          )
+          .sort((a, b) => a.sortOrder - b.sortOrder)
         const overIndex = groupTodos.findIndex((t) => t.id === overId)
         const insertSortOrder = getInsertSortOrder(groupTodos, overIndex)
 
@@ -134,9 +136,11 @@ export function TodoList({
           })
         }
       } else {
-        const targetGroupTodos = todos.filter(
-          (t) => !t.completed && t.importance === targetImportance,
-        )
+        const targetGroupTodos = todos
+          .filter(
+            (t) => !t.completed && t.importance === targetImportance,
+          )
+          .sort((a, b) => a.sortOrder - b.sortOrder)
         const overIndex = targetGroupTodos.findIndex((t) => t.id === overId)
         const insertSortOrder = getInsertSortOrder(targetGroupTodos, overIndex)
 
