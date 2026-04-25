@@ -32,6 +32,7 @@ export function SortableTodoItem({ todo, selectedId }: { todo: Todo; selectedId:
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    touchAction: "none",
   }
 
   const info = getDeadlineInfo(todo.deadline, todo.completed)
