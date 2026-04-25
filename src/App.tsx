@@ -11,6 +11,7 @@ import { arrayMove } from "@dnd-kit/sortable"
 import { TodoInput } from "@/components/todo-input"
 import { TodoList } from "@/components/todo-list"
 import { TodoSidebar } from "@/components/todo-sidebar"
+import { Checkbox } from "@/components/ui/checkbox"
 import { todosAtom } from "@/atoms/todo-atoms"
 import { useLongPressSensor } from "@/lib/drag-sensors"
 import { recalculateSortOrders } from "@/lib/sort-order-utils"
@@ -167,7 +168,7 @@ function AppContent() {
       <DragOverlay>
         {activeTodo ? (
           <div className="flex items-center gap-3 rounded-md px-3 py-2.5 bg-white shadow-lg">
-            <div className="size-4 shrink-0 rounded-sm border border-primary" />
+            <Checkbox checked={activeTodo.completed} />
             <span className="flex-1 text-sm leading-6">{activeTodo.title}</span>
           </div>
         ) : null}
