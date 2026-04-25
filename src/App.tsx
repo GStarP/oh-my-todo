@@ -13,7 +13,7 @@ import { TodoList } from "@/components/todo-list"
 import { TodoSidebar } from "@/components/todo-sidebar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { todosAtom } from "@/atoms/todo-atoms"
-import { useLongPressSensor } from "@/lib/drag-sensors"
+import { useLongPressSensors } from "@/lib/drag-sensors"
 import { recalculateSortOrders } from "@/lib/sort-order-utils"
 import type { Todo } from "@/types/todo"
 
@@ -21,7 +21,7 @@ function AppContent() {
   const [todos, setTodos] = useAtom(todosAtom)
   const [isDragging, setIsDragging] = useState(false)
   const [activeTodo, setActiveTodo] = useState<Todo | null>(null)
-  const sensor = useLongPressSensor()
+  const sensors = useLongPressSensors()
   const todosRef = useRef(todos)
   todosRef.current = todos
 
@@ -157,7 +157,7 @@ function AppContent() {
 
   return (
     <DndContext
-      sensors={[sensor]}
+      sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
