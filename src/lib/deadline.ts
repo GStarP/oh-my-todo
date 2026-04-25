@@ -25,7 +25,7 @@ export function getDeadlineInfo(
     const dlDay = dl.startOf("day")
     const diffDays = dlDay.diff(today, "day")
 
-    if (diffDays < 0) return { urgency: "expired", text: "已过期" }
+    if (diffDays < 0) return { urgency: "expired", text: "过期" }
     if (diffDays === 0) return { urgency: "urgent", text: "今天" }
     if (diffDays === 1) return { urgency: "urgent", text: "明天" }
     if (diffDays <= 3) return { urgency: "remind", text: `${diffDays}天内` }
@@ -35,7 +35,7 @@ export function getDeadlineInfo(
   const diffMs = dl.valueOf() - now.valueOf()
   const isToday = dl.format("YYYY-MM-DD") === now.format("YYYY-MM-DD")
 
-  if (diffMs <= 0) return { urgency: "expired", text: "已过期" }
+  if (diffMs <= 0) return { urgency: "expired", text: "过期" }
 
   const diffHours = diffMs / (1000 * 60 * 60)
 
