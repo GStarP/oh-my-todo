@@ -167,6 +167,7 @@ function AppContent() {
       <DragOverlay>
         {activeTodo ? (
           <div className="flex items-center gap-3 rounded-md px-3 py-2.5 bg-white shadow-lg">
+            <div className="size-4 shrink-0 rounded-sm border border-primary" />
             <span className="flex-1 text-sm leading-6">{activeTodo.title}</span>
           </div>
         ) : null}
