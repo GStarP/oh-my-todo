@@ -11,6 +11,7 @@ import { arrayMove } from "@dnd-kit/sortable"
 import { TodoInput } from "@/components/todo-input"
 import { TodoList } from "@/components/todo-list"
 import { TodoSidebar } from "@/components/todo-sidebar"
+import { TopBar } from "@/components/top-bar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { todosAtom } from "@/atoms/todo-atoms"
 import { useLongPressSensors } from "@/lib/drag-sensors"
@@ -167,9 +168,12 @@ function AppContent() {
         document.body.style.touchAction = ""
       }}
     >
-      <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
+      <div className="mx-auto flex h-screen max-w-2xl flex-col gap-4 px-4 py-4 sm:px-6 sm:py-4">
+        <TopBar />
         <TodoInput isDragging={isDragging} />
-        <TodoList />
+        <div className="flex-1 overflow-y-auto">
+          <TodoList />
+        </div>
         <TodoSidebar />
       </div>
       <DragOverlay>
