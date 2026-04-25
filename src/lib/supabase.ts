@@ -3,17 +3,40 @@ import type { Todo } from "@/types/todo"
 
 export interface SupabaseConfig {
   url: string
-  anonKey: string
+  apiKey: string
 }
 
 export function createSupabaseClient(config: SupabaseConfig): SupabaseClient {
-  return createClient(config.url, config.anonKey)
+  return createClient(config.url, config.apiKey)
 }
 
-export async function validateConnection(client: SupabaseClient): Promise<boolean> {
-  const { error } = await client.from("todos").select("id").limit(1)
-  return !error
+export interface ValidateResult {
+  valid: boolean
+  tableMissing: boolean
 }
+
+export async function validateConnection(client: SupabaseClient): Promise<ValidateResult> {
+  const { error } = await client.from("todos").select("id").limit(1)
+  if (!error) return { valid: true, tableMissing: false }
+  const msg = (error.message ?? "").toLowerCase()
+  const code = (error as { code?: string }).code ?? ""
+  const tableMissing = msg.includes("does not exist") || msg.includes("not found") || msg.includes("relation") || msg.includes("schema cache") || code === "PGRST205"
+  return { valid: !tableMissing, tableMissing }
+}
+
+export const CREATE_TODOS_SQL = `create table todos (
+  id text primary key,
+  title text not null,
+  completed boolean not null default false,
+  deadline text,
+  importance integer not null default 0,
+  sort_order integer not null default 0,
+  notes text not null default ''
+);
+
+alter table todos enable row level security;
+
+create policy "Allow all" on todos for all using (true) with check (true);`
 
 export async function fetchRemoteTodos(client: SupabaseClient): Promise<Todo[]> {
   const { data, error } = await client.from("todos").select("*").order("importance", { ascending: true }).order("sort_order", { ascending: true })

@@ -1,9 +1,9 @@
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useAtom, useSetAtom } from "jotai"
 import { Button } from "@/components/ui/button"
 import { modeAtom, supabaseConfigAtom, todosAtom, switchMode, loadSupabaseTodos } from "@/atoms/todo-atoms"
 import { createSupabaseClient, validateConnection, fetchRemoteTodos, uploadTodos } from "@/lib/supabase"
-import { UploadIcon, DownloadIcon, LogOutIcon, LinkIcon } from "lucide-react"
+import { CloudIcon, HardDriveIcon, PlugIcon, UploadIcon, DownloadIcon, LogOutIcon, LoaderIcon } from "lucide-react"
 import { ConnectDialog } from "@/components/connect-dialog"
 import type { Todo } from "@/types/todo"
 
@@ -13,26 +13,55 @@ export function TopBar() {
   const setTodos = useSetAtom(todosAtom)
   const [connectOpen, setConnectOpen] = useState(false)
   const [loading, setLoading] = useState<string | null>(null)
+  const [tableMissing, setTableMissing] = useState(false)
+  const [connectError, setConnectError] = useState<string | null>(null)
+  const initialSyncDone = useRef(false)
 
-  const handleConnect = async (url: string, anonKey: string) => {
-    const newConfig = { url, anonKey }
+  useEffect(() => {
+    if (mode !== "supabase" || !config || initialSyncDone.current) return
+    initialSyncDone.current = true
+    const client = createSupabaseClient(config)
+    setLoading("download")
+    fetchRemoteTodos(client)
+      .then((remoteTodos) => {
+        loadSupabaseTodos(remoteTodos)
+        setTodos(remoteTodos)
+      })
+      .catch(() => {})
+      .finally(() => setLoading(null))
+  }, [])
+
+  const handleDraft = (url: string, apiKey: string) => {
+    if (url && apiKey) {
+      setConfig({ url, apiKey })
+    }
+  }
+
+  const handleConnect = async (url: string, apiKey: string) => {
+    const newConfig = { url, apiKey }
     const client = createSupabaseClient(newConfig)
     setLoading("connect")
+    setTableMissing(false)
+    setConnectError(null)
     try {
-      const valid = await validateConnection(client)
+      const { valid, tableMissing: missing } = await validateConnection(client)
       if (!valid) {
-        alert("连接失败：无法访问 todos 表，请检查 URL、Anon Key 和表是否存在")
+        if (missing) {
+          setTableMissing(true)
+        } else {
+          setConnectError("无法访问 todos 表，请检查 URL 和 API Key")
+        }
         return
       }
       const remoteTodos = await fetchRemoteTodos(client)
-      const result = switchMode("supabase", newConfig)
-      setMode(result.mode)
+      const switched = switchMode("supabase", newConfig)
+      setMode(switched.mode)
       setConfig(newConfig)
       loadSupabaseTodos(remoteTodos)
       setTodos(remoteTodos)
       setConnectOpen(false)
     } catch (e) {
-      alert(`连接失败：${e instanceof Error ? e.message : "未知错误"}`)
+      setConnectError(e instanceof Error ? e.message : "未知错误")
     } finally {
       setLoading(null)
     }
@@ -40,6 +69,7 @@ export function TopBar() {
 
   const handleUpload = async () => {
     if (!config) return
+    if (!confirm("上传将用本地数据覆盖云端数据，确定吗？")) return
     const client = createSupabaseClient(config)
     setLoading("upload")
     try {
@@ -55,6 +85,7 @@ export function TopBar() {
 
   const handleDownload = async () => {
     if (!config) return
+    if (!confirm("下载将用云端数据覆盖本地数据，确定吗？")) return
     const client = createSupabaseClient(config)
     setLoading("download")
     try {
@@ -70,6 +101,7 @@ export function TopBar() {
   }
 
   const handleExit = () => {
+    if (!confirm("确定退出 Supabase 模式？")) return
     const result = switchMode("local")
     setMode(result.mode)
     setConfig(null)
@@ -78,35 +110,35 @@ export function TopBar() {
 
   return (
     <>
-      <div className="flex items-center justify-between rounded-lg bg-white px-4 py-2.5">
-        <span className="text-sm font-medium">
-          {mode === "supabase" ? "☁️ Supabase 模式" : "📁 本地模式"}
+      <div className="flex items-center justify-between">
+        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+          {mode === "supabase" ? <CloudIcon className="size-3.5" /> : <HardDriveIcon className="size-3.5" />}
+          {mode === "supabase" ? "Supabase" : "本地"}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center -mr-1.5">
           {mode === "local" ? (
-            <Button variant="outline" size="sm" onClick={() => setConnectOpen(true)}>
-              <LinkIcon className="size-3.5" />
+            <Button variant="ghost" size="sm" onClick={() => setConnectOpen(true)}>
+              <PlugIcon className="size-3.5" />
               连接
             </Button>
           ) : (
             <>
-              <Button variant="outline" size="sm" onClick={handleUpload} disabled={loading !== null}>
-                {loading === "upload" ? "..." : <UploadIcon className="size-3.5" />}
+              <Button variant="ghost" size="sm" onClick={handleUpload} disabled={loading !== null}>
+                {loading === "upload" ? <LoaderIcon className="size-3.5 animate-spin" /> : <UploadIcon className="size-3.5" />}
                 上传
               </Button>
-              <Button variant="outline" size="sm" onClick={handleDownload} disabled={loading !== null}>
-                {loading === "download" ? "..." : <DownloadIcon className="size-3.5" />}
+              <Button variant="ghost" size="sm" onClick={handleDownload} disabled={loading !== null}>
+                {loading === "download" ? <LoaderIcon className="size-3.5 animate-spin" /> : <DownloadIcon className="size-3.5" />}
                 下载
               </Button>
-              <Button variant="ghost" size="sm" onClick={handleExit}>
+              <Button variant="ghost" size="icon-sm" onClick={handleExit}>
                 <LogOutIcon className="size-3.5" />
-                退出
               </Button>
             </>
           )}
         </div>
       </div>
-      <ConnectDialog open={connectOpen} onOpenChange={setConnectOpen} onConnect={handleConnect} loading={loading === "connect"} />
+      <ConnectDialog open={connectOpen} onOpenChange={setConnectOpen} onConnect={handleConnect} onDraft={handleDraft} loading={loading === "connect"} initialUrl={config?.url ?? ""} initialApiKey={config?.apiKey ?? ""} tableMissing={tableMissing} error={connectError} />
     </>
   )
 }
