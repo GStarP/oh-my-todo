@@ -10,6 +10,7 @@ function makeTodo(overrides: Partial<Todo>): Todo {
     completed: overrides.completed ?? false,
     deadline: overrides.deadline ?? null,
     importance: overrides.importance ?? 0,
+    sortOrder: overrides.sortOrder ?? 0,
   }
 }
 
@@ -30,7 +31,7 @@ test("groups completed todos separately and keeps default group open when only i
     [
       {
         key: "importance-0",
-        label: "重要度 0",
+        label: "Lv.0",
         defaultOpen: true,
         titles: ["active"],
       },
@@ -54,9 +55,24 @@ test("keeps all active groups open by default and completed closed", () => {
   assert.deepEqual(
     groups.map((group) => ({ label: group.label, defaultOpen: group.defaultOpen })),
     [
-      { label: "重要度 2", defaultOpen: true },
-      { label: "重要度 0", defaultOpen: true },
+      { label: "Lv.2", defaultOpen: true },
+      { label: "Lv.0", defaultOpen: true },
       { label: "已完成", defaultOpen: false },
     ]
+  )
+})
+
+test("sorts todos within each group by sortOrder ascending", () => {
+  const groups = buildTodoGroups([
+    makeTodo({ title: "first", importance: 1, sortOrder: 1 }),
+    makeTodo({ title: "third", importance: 1, sortOrder: 5 }),
+    makeTodo({ title: "second", importance: 1, sortOrder: 3 }),
+    makeTodo({ title: "zero", importance: 1, sortOrder: 0 }),
+  ])
+
+  assert.equal(groups.length, 1)
+  assert.deepEqual(
+    groups[0].todos.map((t) => t.title),
+    ["zero", "first", "second", "third"]
   )
 })

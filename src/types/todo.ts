@@ -4,4 +4,5 @@ export interface Todo {
   completed: boolean
   deadline: string | null
   importance: number
+  sortOrder: number
 }

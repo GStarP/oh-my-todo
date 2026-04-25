@@ -4,6 +4,7 @@ export interface TodoGroup {
   key: string
   label: string
   defaultOpen: boolean
+  importance: number | null
   todos: Todo[]
 }
 
@@ -30,7 +31,8 @@ export function buildTodoGroups(todos: Todo[]): TodoGroup[] {
       key: `importance-${importance}`,
       label: `Lv.${importance}`,
       defaultOpen: true,
-      todos: items,
+      importance,
+      todos: items.sort((a, b) => a.sortOrder - b.sortOrder),
     }))
 
   if (completed.length === 0) {
@@ -43,6 +45,7 @@ export function buildTodoGroups(todos: Todo[]): TodoGroup[] {
       key: "completed",
       label: "已完成",
       defaultOpen: false,
+      importance: null,
       todos: completed,
     },
   ]
