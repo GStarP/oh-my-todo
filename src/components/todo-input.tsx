@@ -19,12 +19,12 @@ export function TodoInput() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
+    <form onSubmit={handleSubmit}>
       <Input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder="Add a new todo..."
-        className="flex-1"
+        placeholder="添加待办"
+        className="flex-1 bg-white border-white"
       />
     </form>
   )

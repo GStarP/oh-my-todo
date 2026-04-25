@@ -28,7 +28,7 @@ export function buildTodoGroups(todos: Todo[]): TodoGroup[] {
     .sort((a, b) => b[0] - a[0])
     .map(([importance, items]) => ({
       key: `importance-${importance}`,
-      label: `重要度 ${importance}`,
+      label: `Lv.${importance}`,
       defaultOpen: true,
       todos: items,
     }))

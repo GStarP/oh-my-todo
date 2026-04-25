@@ -5,7 +5,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetDescription,
 } from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -16,7 +15,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { ChevronDownIcon, XIcon } from "lucide-react"
+import { ChevronDownIcon, XIcon, Trash2Icon } from "lucide-react"
 import { selectedTodoAtom, selectedTodoIdAtom, todosAtom } from "@/atoms/todo-atoms"
 import { isDateOnly } from "@/lib/deadline"
 import dayjs from "dayjs"
@@ -32,8 +31,7 @@ export function TodoSidebar() {
     <Sheet open={open} onOpenChange={(v) => !v && setSelectedId(null)}>
       <SheetContent side="right">
         <SheetHeader>
-          <SheetTitle>Edit Todo</SheetTitle>
-          <SheetDescription>Modify or delete this todo.</SheetDescription>
+          <SheetTitle>编辑待办</SheetTitle>
         </SheetHeader>
         {selectedTodo && <TodoEditForm key={selectedTodo.id} todo={selectedTodo} />}
       </SheetContent>
@@ -115,9 +113,9 @@ function TodoEditForm({ todo }: { todo: Todo }) {
     : ""
 
   return (
-    <div className="flex flex-col gap-4 px-4">
+    <div className="flex flex-col gap-5 px-5">
       <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium">Title</Label>
+        <Label>标题</Label>
         <Input
           value={editTitle}
           onChange={(e) => setEditTitle(e.target.value)}
@@ -126,7 +124,7 @@ function TodoEditForm({ todo }: { todo: Todo }) {
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium">重要度</Label>
+        <Label>重要度</Label>
         <Input
           type="number"
           min={0}
@@ -136,11 +134,11 @@ function TodoEditForm({ todo }: { todo: Todo }) {
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium">Deadline</Label>
+        <Label>截止时间</Label>
         <div className="flex gap-2">
           <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
             <PopoverTrigger render={<Button variant="outline" className="justify-between font-normal flex-1" />}>
-              {editDeadline ? dayjs(editDeadline).format("YYYY-MM-DD") : "Pick a date"}
+              {editDeadline ? dayjs(editDeadline).format("YYYY-MM-DD") : "选择日期"}
               <ChevronDownIcon />
             </PopoverTrigger>
             <PopoverContent className="w-auto overflow-hidden p-0" align="start">
@@ -160,20 +158,15 @@ function TodoEditForm({ todo }: { todo: Todo }) {
             className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none w-32"
           />
           {editDeadline && (
-            <Button variant="ghost" size="icon" onClick={handleClearDeadline}>
+            <Button variant="ghost" size="icon-sm" onClick={handleClearDeadline}>
               <XIcon className="size-4" />
             </Button>
           )}
         </div>
       </div>
-      <div className="flex flex-col gap-2">
-        <Label className="text-sm font-medium">Status</Label>
-        <span className="text-sm text-muted-foreground">
-          {todo.completed ? "Completed" : "Active"}
-        </span>
-      </div>
-      <Button variant="destructive" onClick={handleDelete} className="mt-4">
-        Delete
+      <Button variant="destructive" onClick={handleDelete} className="mt-4 gap-2">
+        <Trash2Icon className="size-4" />
+        删除
       </Button>
     </div>
   )

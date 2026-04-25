@@ -6,8 +6,7 @@ import { TodoSidebar } from "@/components/todo-sidebar"
 function App() {
   return (
     <Provider>
-      <div className="mx-auto flex h-screen max-w-2xl flex-col gap-4 p-6">
-        <h1 className="text-2xl font-bold">Oh My Todo</h1>
+      <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
         <TodoInput />
         <TodoList />
         <TodoSidebar />
