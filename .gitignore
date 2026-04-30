@@ -25,3 +25,4 @@ dist-ssr
 
 # Implementation plans
 .plans/
+.worktrees/
