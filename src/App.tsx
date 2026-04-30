@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { Provider, useAtom } from "jotai"
 import {
   DndContext,
@@ -24,7 +24,10 @@ function AppContent() {
   const [activeTodo, setActiveTodo] = useState<Todo | null>(null)
   const sensors = useLongPressSensors()
   const todosRef = useRef(todos)
-  todosRef.current = todos
+
+  useEffect(() => {
+    todosRef.current = todos
+  }, [todos])
 
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {

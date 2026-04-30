@@ -7,8 +7,13 @@ const LOCAL_KEY = "oh-my-todo"
 const SUPABASE_KEY = "oh-my-todo-supabase"
 const MODE_KEY = "oh-my-todo-mode"
 const CONFIG_KEY = "oh-my-todo-supabase-config"
+const SYNC_KEY = "oh-my-todo-supabase-sync"
 
 export type Mode = "local" | "supabase"
+export interface SupabaseSyncState {
+  baseVersion: number | null
+  dirty: boolean
+}
 
 function readStorage(key: string): Todo[] {
   const raw = localStorage.getItem(key)
@@ -32,7 +37,8 @@ function writeStorage(key: string, todos: Todo[]) {
 }
 
 function readMode(): Mode {
-  return (localStorage.getItem(MODE_KEY) as Mode) ?? "local"
+  const mode = localStorage.getItem(MODE_KEY)
+  return mode === "local" || mode === "supabase" ? mode : "local"
 }
 
 function writeMode(mode: Mode) {
@@ -57,6 +63,39 @@ function writeConfig(config: SupabaseConfig | null) {
   }
 }
 
+export function readSupabaseSyncState(): SupabaseSyncState {
+  const raw = localStorage.getItem(SYNC_KEY)
+  if (!raw) return { baseVersion: null, dirty: false }
+
+  try {
+    const value = JSON.parse(raw) as Partial<SupabaseSyncState>
+    return {
+      baseVersion: typeof value.baseVersion === "number" ? value.baseVersion : null,
+      dirty: value.dirty === true,
+    }
+  } catch {
+    return { baseVersion: null, dirty: false }
+  }
+}
+
+export function writeSupabaseSyncState(state: SupabaseSyncState) {
+  localStorage.setItem(SYNC_KEY, JSON.stringify(state))
+}
+
+export function markSupabaseSyncDirty() {
+  if (readMode() !== "supabase") return
+  writeSupabaseSyncState({ ...readSupabaseSyncState(), dirty: true })
+}
+
+export function applySupabasePull(todos: Todo[], version: number) {
+  writeStorage(SUPABASE_KEY, todos)
+  writeSupabaseSyncState({ baseVersion: version, dirty: false })
+}
+
+export function applySupabasePush(version: number) {
+  writeSupabaseSyncState({ baseVersion: version, dirty: false })
+}
+
 const initialMode = readMode()
 const storageKey = initialMode === "supabase" ? SUPABASE_KEY : LOCAL_KEY
 
@@ -75,6 +114,9 @@ export const todosAtom = atom<Todo[], [TodoUpdate], void>(
     const mode = get(modeAtom)
     const key = mode === "supabase" ? SUPABASE_KEY : LOCAL_KEY
     writeStorage(key, get(innerTodosAtom))
+    if (mode === "supabase") {
+      writeSupabaseSyncState({ ...readSupabaseSyncState(), dirty: true })
+    }
   },
 )
 
