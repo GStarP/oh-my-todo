@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useLayoutEffect, useRef, useState } from "react"
 import { useAtom, useSetAtom } from "jotai"
 import {
   Sheet,
@@ -18,6 +18,7 @@ import {
 import { ChevronDownIcon, XIcon, Trash2Icon } from "lucide-react"
 import { selectedTodoAtom, selectedTodoIdAtom, todosAtom } from "@/atoms/todo-atoms"
 import { isDateOnly } from "@/lib/deadline"
+import { resizeNotesTextarea } from "./todo-sidebar.helpers"
 import dayjs from "dayjs"
 import type { Todo } from "@/types/todo"
 
@@ -39,14 +40,19 @@ export function TodoSidebar() {
   )
 }
 
-function TodoEditForm({ todo }: { todo: Todo }) {
+export function TodoEditForm({ todo }: { todo: Todo }) {
   const setTodos = useSetAtom(todosAtom)
   const setSelectedId = useSetAtom(selectedTodoIdAtom)
+  const notesRef = useRef<HTMLTextAreaElement | null>(null)
 
   const [editTitle, setEditTitle] = useState(todo.title)
   const [editNotes, setEditNotes] = useState(todo.notes)
   const [editDeadline, setEditDeadline] = useState<string | null>(todo.deadline)
   const [calendarOpen, setCalendarOpen] = useState(false)
+  const handleNotesRef = (textarea: HTMLTextAreaElement | null) => {
+    notesRef.current = textarea
+    if (textarea) resizeNotesTextarea(textarea)
+  }
 
   const handleSave = () => {
     const trimmed = editTitle.trim()
@@ -69,9 +75,12 @@ function TodoEditForm({ todo }: { todo: Todo }) {
 
   const handleNotesInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setEditNotes(e.target.value)
-    e.target.style.height = "auto"
-    e.target.style.height = e.target.scrollHeight + "px"
+    resizeNotesTextarea(e.target)
   }
+
+  useLayoutEffect(() => {
+    if (notesRef.current) resizeNotesTextarea(notesRef.current)
+  }, [editNotes])
 
   const handleDelete = () => {
     setTodos((draft) => {
@@ -127,41 +136,100 @@ function TodoEditForm({ todo }: { todo: Todo }) {
     : ""
 
   return (
+    <TodoEditFormView
+      editTitle={editTitle}
+      editNotes={editNotes}
+      editDeadline={editDeadline}
+      calendarOpen={calendarOpen}
+      deadlineDate={deadlineDate}
+      deadlineTime={deadlineTime}
+      importance={todo.importance}
+      onTitleChange={(e) => setEditTitle(e.target.value)}
+      onTitleBlur={handleSave}
+      onTitleKeyDown={(e) => e.key === "Enter" && handleSave()}
+      onNotesChange={handleNotesInput}
+      onNotesBlur={handleNotesBlur}
+      notesRef={handleNotesRef}
+      onCalendarOpenChange={setCalendarOpen}
+      onDateSelect={handleDateSelect}
+      onTimeChange={(e) => handleTimeChange(e.target.value)}
+      onClearDeadline={handleClearDeadline}
+      onImportanceChange={(e) => handleImportanceChange(e.target.value)}
+      onDelete={handleDelete}
+    />
+  )
+}
+
+interface TodoEditFormViewProps {
+  editTitle: string
+  editNotes: string
+  editDeadline: string | null
+  calendarOpen: boolean
+  deadlineDate: Date | undefined
+  deadlineTime: string
+  importance: number
+  onTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onTitleBlur: () => void
+  onTitleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void
+  onNotesChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
+  onNotesBlur: () => void
+  notesRef: (textarea: HTMLTextAreaElement | null) => void
+  onCalendarOpenChange: (open: boolean) => void
+  onDateSelect: (date: Date | undefined) => void
+  onTimeChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onClearDeadline: () => void
+  onImportanceChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onDelete: () => void
+}
+
+export function TodoEditFormView({
+  editTitle,
+  editNotes,
+  editDeadline,
+  calendarOpen,
+  deadlineDate,
+  deadlineTime,
+  importance,
+  onTitleChange,
+  onTitleBlur,
+  onTitleKeyDown,
+  onNotesChange,
+  onNotesBlur,
+  notesRef,
+  onCalendarOpenChange,
+  onDateSelect,
+  onTimeChange,
+  onClearDeadline,
+  onImportanceChange,
+  onDelete,
+}: TodoEditFormViewProps) {
+  return (
     <div className="flex flex-col gap-5 px-5">
       <div className="flex flex-col gap-2">
         <Label>标题</Label>
         <Input
           value={editTitle}
-          onChange={(e) => setEditTitle(e.target.value)}
-          onBlur={handleSave}
-          onKeyDown={(e) => e.key === "Enter" && handleSave()}
+          onChange={onTitleChange}
+          onBlur={onTitleBlur}
+          onKeyDown={onTitleKeyDown}
         />
       </div>
       <div className="flex flex-col gap-2">
         <Label>备注</Label>
         <textarea
+          ref={notesRef}
           value={editNotes}
-          onChange={handleNotesInput}
-          onBlur={handleNotesBlur}
+          onChange={onNotesChange}
+          onBlur={onNotesBlur}
           placeholder="添加备注"
           rows={2}
           className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm leading-6 transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 resize-none overflow-hidden"
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label>重要度</Label>
-        <Input
-          type="number"
-          min={0}
-          value={todo.importance}
-          onChange={(e) => handleImportanceChange(e.target.value)}
-          className="w-24"
-        />
-      </div>
-      <div className="flex flex-col gap-2">
         <Label>截止时间</Label>
         <div className="flex gap-2">
-          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+          <Popover open={calendarOpen} onOpenChange={onCalendarOpenChange}>
             <PopoverTrigger render={<Button variant="outline" className="justify-between font-normal flex-1 bg-transparent" />}>
               {editDeadline ? dayjs(editDeadline).format("YYYY-MM-DD") : "选择日期"}
               <ChevronDownIcon />
@@ -170,7 +238,7 @@ function TodoEditForm({ todo }: { todo: Todo }) {
               <Calendar
                 mode="single"
                 selected={deadlineDate}
-                onSelect={handleDateSelect}
+                onSelect={onDateSelect}
               />
             </PopoverContent>
           </Popover>
@@ -179,17 +247,27 @@ function TodoEditForm({ todo }: { todo: Todo }) {
             step="1"
             disabled={!editDeadline}
             value={deadlineTime}
-            onChange={(e) => handleTimeChange(e.target.value)}
+            onChange={onTimeChange}
             className="appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none w-32"
           />
           {editDeadline && (
-            <Button variant="ghost" size="icon-sm" onClick={handleClearDeadline}>
+            <Button variant="ghost" size="icon-sm" onClick={onClearDeadline}>
               <XIcon className="size-4" />
             </Button>
           )}
         </div>
       </div>
-      <Button variant="destructive" onClick={handleDelete} className="mt-4 gap-2">
+      <div className="flex flex-col gap-2">
+        <Label>重要度</Label>
+        <Input
+          type="number"
+          min={0}
+          value={importance}
+          onChange={onImportanceChange}
+          className="w-24"
+        />
+      </div>
+      <Button variant="destructive" onClick={onDelete} className="mt-4 gap-2">
         <Trash2Icon className="size-4" />
         删除
       </Button>
