@@ -181,7 +181,7 @@ function AppContent() {
       </div>
       <DragOverlay>
         {activeTodo ? (
-          <div className="flex items-center gap-3 rounded-md px-3 py-2.5 bg-white shadow-lg">
+          <div className="flex items-center gap-3 rounded-md px-3 py-3.5 bg-white shadow-lg">
             <Checkbox checked={activeTodo.completed} />
             <span className="flex-1 text-sm leading-6">{activeTodo.title}</span>
           </div>

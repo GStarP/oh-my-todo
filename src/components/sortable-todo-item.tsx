@@ -5,7 +5,7 @@ import { useSetAtom } from "jotai"
 import { todosAtom, selectedTodoIdAtom } from "@/atoms/todo-atoms"
 import { cn } from "@/lib/utils"
 import { getDeadlineInfo } from "@/lib/deadline"
-import { ClockIcon } from "lucide-react"
+import { ClockIcon, BookTextIcon } from "lucide-react"
 import type { Todo } from "@/types/todo"
 
 const urgencyBg: Record<string, string> = {
@@ -45,7 +45,7 @@ export function SortableTodoItem({ todo, selectedId }: { todo: Todo; selectedId:
       {...listeners}
       onClick={() => setSelectedId(todo.id)}
       className={cn(
-        "flex items-center gap-3 rounded-md px-3 py-2.5 cursor-pointer transition-all bg-white",
+        "flex items-center gap-3 rounded-md px-3 py-3.5 cursor-pointer transition-all bg-white",
         selectedId === todo.id && "shadow-subtle outline outline-1 outline-primary/20",
         !todo.completed && info?.urgency && urgencyBg[info.urgency],
         todo.completed && "bg-white/70",
@@ -63,14 +63,19 @@ export function SortableTodoItem({ todo, selectedId }: { todo: Todo; selectedId:
           }
         />
       </div>
-      <span
-        className={cn(
-          "flex-1 text-sm leading-6",
-          todo.completed && "line-through text-muted-foreground"
+      <div className="flex items-center gap-1.5 flex-1">
+        <span
+          className={cn(
+            "text-sm leading-6",
+            todo.completed && "line-through text-muted-foreground"
+          )}
+        >
+          {todo.title}
+        </span>
+        {todo.notes && (
+          <BookTextIcon className="size-3.5 text-muted-foreground shrink-0" />
         )}
-      >
-        {todo.title}
-      </span>
+      </div>
       {info.text && (
         <span
           className={cn(

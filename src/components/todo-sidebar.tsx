@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/popover"
 import { ChevronDownIcon, XIcon, Trash2Icon } from "lucide-react"
 import { selectedTodoAtom, selectedTodoIdAtom, todosAtom } from "@/atoms/todo-atoms"
+import { UI } from "@/lib/ui"
 import { isDateOnly } from "@/lib/deadline"
 import { resizeNotesTextarea } from "./todo-sidebar.helpers"
 import dayjs from "dayjs"
@@ -82,7 +83,14 @@ export function TodoEditForm({ todo }: { todo: Todo }) {
     if (notesRef.current) resizeNotesTextarea(notesRef.current)
   }, [editNotes])
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
+    const confirmed = await UI.confirm({
+      title: "删除待办",
+      description: `确定要删除「${todo.title}」吗？`,
+      confirmText: "删除",
+      cancelText: "取消",
+    })
+    if (!confirmed) return
     setTodos((draft) => {
       const index = draft.findIndex((t) => t.id === todo.id)
       if (index !== -1) draft.splice(index, 1)
