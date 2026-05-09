@@ -4,34 +4,32 @@ import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 import { VitePWA } from "vite-plugin-pwa"
 
+import { cloudflare } from "@cloudflare/vite-plugin";
+
 export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss(),
-    VitePWA({
-      registerType: "autoUpdate",
-      manifest: {
-        name: "Oh My Todo",
-        short_name: "Oh My Todo",
-        description: "What should I do?",
-        theme_color: "#FFF",
-        background_color: "#FFF",
-        display: "standalone",
-        icons: [
-          {
-            src: "/icon-192x192.png",
-            sizes: "192x192",
-            type: "image/png",
-          },
-          {
-            src: "/icon-512x512.png",
-            sizes: "512x512",
-            type: "image/png",
-          },
-        ],
-      },
-    }),
-  ],
+  plugins: [react(), tailwindcss(), VitePWA({
+    registerType: "autoUpdate",
+    manifest: {
+      name: "Oh My Todo",
+      short_name: "Oh My Todo",
+      description: "What should I do?",
+      theme_color: "#FFF",
+      background_color: "#FFF",
+      display: "standalone",
+      icons: [
+        {
+          src: "/icon-192x192.png",
+          sizes: "192x192",
+          type: "image/png",
+        },
+        {
+          src: "/icon-512x512.png",
+          sizes: "512x512",
+          type: "image/png",
+        },
+      ],
+    },
+  }), cloudflare()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
