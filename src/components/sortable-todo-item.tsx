@@ -53,6 +53,7 @@ export function SortableTodoItem({
       onClick={() => setSelectedId(todo.id)}
       className={cn(
         "flex items-center gap-3 rounded-md px-3 py-3.5 cursor-pointer transition-all bg-white border",
+        selectedId === todo.id && "shadow-subtle outline outline-1 outline-primary/20",
         !todo.completed && info?.urgency && urgencyBg[info.urgency],
         todo.completed && "bg-white/70",
         isDragging && "invisible",
